@@ -24,30 +24,34 @@ OptionParser.new do |opts|
       puts "Invalid container name!"
       exit
     else
-      options._container << v
+      options._container = v
     end
   end
   
-  opts.on("-r", "--require LIBRARY",
-    "Require the LIBRARY before executing your script") do |lib|
-    options.library << lib
-  end
+  # opts.on("-r", "--require LIBRARY",
+  #   "Require the LIBRARY before executing your script") do |lib|
+  #   options.library << lib
+  # end
+
 end.parse!()
 
 # Needed variables
-# git_rep = "https://github.com/TcM1911/RUpdocker.git"
-git_path =  `whereis git | cut -d " " -f 2`
+@git_rep = "https://github.com/TcM1911/RUpdocker.git"
 
 _container = options._container
 
 # # Generate a random name for download dir
-download_dir = SecureRandom.hex(4)
+@download_dir = SecureRandom.hex(6)
 
-# Download the docker update scripts.
-# git_download = system(git_path, "clone", git_rep, "/tmp/#{download_dir}")
-
-def get_running_containers()
+def download_resource_files
+  puts "[-] Downloading scripts from the repo."
+  # Download the docker update scripts.
+  system "git clone #{@git_rep} /tmp/#{@download_dir}"
+end
+  
+def get_running_containers
   #ps_output = exec("sudo docker ps")
+  # Test output
   ps_output = 'CONTAINER ID        IMAGE                    COMMAND             CREATED             STATUS              PORTS                                      NAMES
 b52a163e70cd        image/mailrelay:latest   "./start_relay"     7 days ago          Up 39 hours         0.0.0.0:110->110/tcp                       mailrelay
 b8d57ae3cade        openvpn:latest           "./start_vpn"       7 days ago          Up 39 hours         0.0.0.0:21->21/tcp, 0.0.0.0:587->587/tcp   gatekeeper_uk'
@@ -64,5 +68,38 @@ def find_image(docker_ps_output, container)
   end
 end
 
+def update_container
+  # Generate random name for the temp container.
+  # Start the temp container and run the main update script.
+  # Commit the updated container to the new image.
+  # Remove the temp container.
+  return true
+end
+
+def restart_container(container, image, start_arg)
+end
+
+def cleanup
+  # Remove temp folder
+  puts "[-] Cleaning up..."
+  system "rm -rf /tmp/#{@download_dir}"
+  puts "[-] Done!"
+end
+
+
 docker_ps = get_running_containers
 image = find_image docker_ps, _container
+
+if download_resource_files
+  if update_container
+    # Run as separate threads
+    # restart_container
+    cleanup
+  else
+    puts "Update failed!"
+    exit 0
+  end
+else
+  puts "Download failed!"
+  exit 0
+end
